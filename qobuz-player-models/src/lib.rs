@@ -85,7 +85,7 @@ pub struct ArtistPage {
     pub description: Option<String>,
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct Playlist {
     pub is_owned: bool,
     pub title: String,

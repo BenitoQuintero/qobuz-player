@@ -39,6 +39,14 @@ pub async fn init(
         client.featured_playlists(),
     )?;
 
+    let user_owned_playlists = favorites
+        .playlists
+        .clone()
+        .into_iter()
+        .filter(|x| x.is_owned)
+        .clone()
+        .collect();
+
     let featured_albums = featured_albums
         .into_iter()
         .map(|x| {
@@ -130,6 +138,10 @@ pub async fn init(
         queue: QueueState {
             queue: UnfilteredListState {
                 items: Default::default(),
+                state: Default::default(),
+            },
+            playlists: UnfilteredListState {
+                items: user_owned_playlists,
                 state: Default::default(),
             },
         },

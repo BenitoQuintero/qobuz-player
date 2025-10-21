@@ -118,7 +118,7 @@ enum Endpoint {
     Playlist,
     // PlaylistCreate,
     // PlaylistDelete,
-    // PlaylistAddTracks,
+    PlaylistAddTracks,
     // PlaylistDeleteTracks,
     // PlaylistUpdatePosition,
     Search,
@@ -144,7 +144,7 @@ impl Display for Endpoint {
             Endpoint::Playlist => "playlist/get",
             // Endpoint::PlaylistCreate => "playlist/create",
             // Endpoint::PlaylistDelete => "playlist/delete",
-            // Endpoint::PlaylistAddTracks => "playlist/addTracks",
+            Endpoint::PlaylistAddTracks => "playlist/addTracks",
             // Endpoint::PlaylistDeleteTracks => "playlist/deleteTracks",
             // Endpoint::PlaylistUpdatePosition => "playlist/updateTracksPosition",
             Endpoint::Search => "catalog/search",
@@ -338,22 +338,22 @@ impl Client {
     //     post!(self, &endpoint, form_data)
     // }
 
-    // pub async fn playlist_add_track(
-    //     &self,
-    //     playlist_id: &str,
-    //     track_ids: Vec<&str>,
-    // ) -> Result<Playlist> {
-    //     let endpoint = format!("{}{}", self.base_url, Endpoint::PlaylistAddTracks);
+    pub async fn playlist_add_track(
+        &self,
+        playlist_id: &str,
+        track_ids: Vec<&str>,
+    ) -> Result<qobuz_player_models::Playlist> {
+        let endpoint = format!("{}{}", self.base_url, Endpoint::PlaylistAddTracks);
 
-    //     let track_ids = track_ids.join(",");
+        let track_ids = track_ids.join(",");
 
-    //     let mut form_data = HashMap::new();
-    //     form_data.insert("playlist_id", playlist_id);
-    //     form_data.insert("track_ids", track_ids.as_str());
-    //     form_data.insert("no_duplicate", "true");
+        let mut form_data = HashMap::new();
+        form_data.insert("playlist_id", playlist_id);
+        form_data.insert("track_ids", track_ids.as_str());
+        form_data.insert("no_duplicate", "true");
 
-    //     post!(self, &endpoint, form_data)
-    // }
+        post!(self, &endpoint, form_data)
+    }
 
     // pub async fn playlist_delete_track(
     //     &self,
