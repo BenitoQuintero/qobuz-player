@@ -278,6 +278,20 @@ impl Client {
         Ok(())
     }
 
+    pub async fn add_track_to_playlist(&self, track_id: u32, playlist_id: u32) -> Result<()> {
+        let client = self.get_client().await?;
+
+        let playlist_string = format!("{}", playlist_id);
+        let playlist_id: &str = &playlist_string;
+
+        let track_string = format!("{}", track_id);
+        let track_id: Vec<&str> = vec![&track_string];
+
+        client.playlist_add_track(playlist_id, track_id).await?;
+        self.favorites_cache.clear().await;
+        Ok(())
+    }
+
     pub async fn favorites(&self) -> Result<Favorites> {
         if let Some(cache) = self.favorites_cache.get().await {
             return Ok(cache);

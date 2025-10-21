@@ -1,4 +1,4 @@
-use qobuz_player_models::AlbumSimple;
+use qobuz_player_models::{AlbumSimple, Playlist};
 use ratatui::{crossterm::event::KeyCode, prelude::*, widgets::*};
 
 use crate::{
@@ -21,9 +21,17 @@ pub(crate) struct PlaylistPopupState {
 }
 
 #[derive(PartialEq)]
+pub(crate) struct QueuePopupState {
+    pub track_id: u32,
+    pub playlists: Vec<Playlist>,
+    pub state: ListState,
+}
+
+#[derive(PartialEq)]
 pub(crate) enum Popup {
     Artist(ArtistPopupState),
     Playlist(PlaylistPopupState),
+    Queue(QueuePopupState),
 }
 
 impl Popup {
@@ -62,6 +70,28 @@ impl Popup {
 
                 frame.render_widget(Clear, area);
                 frame.render_widget(tabs, area);
+            }
+            Popup::Queue(queue) => {
+                let area = center(
+                    frame.area(),
+                    Constraint::Percentage(50),
+                    Constraint::Length(queue.playlists.len() as u16 + 2),
+                );
+
+                let list: Vec<ListItem> = queue
+                    .playlists
+                    .iter()
+                    .map(|playlist| ListItem::from(Line::from(playlist.title.clone())))
+                    .collect();
+
+                let list = List::new(list)
+                    .block(block("Add to Playlist", false))
+                    .highlight_style(Style::default().bg(Color::Blue))
+                    .highlight_symbol(">")
+                    .highlight_spacing(HighlightSpacing::Always);
+
+                frame.render_widget(Clear, area);
+                frame.render_stateful_widget(list, area, &mut queue.state);
             }
         };
     }
@@ -104,6 +134,28 @@ impl Popup {
                 KeyCode::Enter => {
                     let id = playlist_popup_state.playlist_id;
                     Some(PlayOutcome::Playlist((id, playlist_popup_state.shuffle)))
+                }
+                _ => None,
+            },
+            Popup::Queue(queue_popup_state) => match key {
+                KeyCode::Up | KeyCode::Char('k') => {
+                    queue_popup_state.state.select_previous();
+                    None
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    queue_popup_state.state.select_next();
+                    None
+                }
+                KeyCode::Enter => {
+                    if let Some(playlist_index) = queue_popup_state.state.selected()
+                        && let Some(playlist) = queue_popup_state.playlists.get(playlist_index)
+                    {
+                        return Some(PlayOutcome::AddTrackToPlaylist {
+                            track_id: queue_popup_state.track_id,
+                            playlist_id: playlist.id,
+                        });
+                    }
+                    None
                 }
                 _ => None,
             },

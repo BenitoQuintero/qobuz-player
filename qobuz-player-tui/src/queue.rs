@@ -1,4 +1,4 @@
-use qobuz_player_models::{Track, TrackStatus};
+use qobuz_player_models::{Playlist, Track, TrackStatus};
 use ratatui::{
     crossterm::event::{Event, KeyCode, KeyEventKind},
     prelude::*,
@@ -8,11 +8,13 @@ use ratatui::{
 
 use crate::{
     app::{Output, PlayOutcome, UnfilteredListState},
+    popup::{Popup, QueuePopupState},
     ui::basic_list_table,
 };
 
 pub(crate) struct QueueState {
     pub queue: UnfilteredListState<Track>,
+    pub playlists: UnfilteredListState<Playlist>,
 }
 
 impl QueueState {
@@ -62,7 +64,25 @@ impl QueueState {
                         }
                         Output::Consumed
                     }
+                    KeyCode::Char('a') => {
+                        let track_index = self.queue.state.selected();
 
+                        let id = track_index
+                            .and_then(|index| self.queue.items.get(index))
+                            .map(|track| track.id);
+
+                        // HACK: Probably shouldnt clone this vec, runs everytime
+                        let user_playlists = self.playlists.items.clone();
+
+                        if let Some(id) = id {
+                            return Output::Popup(Popup::Queue(QueuePopupState {
+                                track_id: id,
+                                playlists: user_playlists,
+                                state: Default::default(),
+                            }));
+                        }
+                        Output::Consumed
+                    }
                     _ => Output::NotConsumed,
                 }
             }
