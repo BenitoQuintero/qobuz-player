@@ -60,6 +60,7 @@ pub(crate) enum PlayOutcome {
     Playlist((u32, bool)),
     Track(u32),
     SkipToPosition(u32),
+    AddTrackToPlaylist { track_id: u32, playlist_id: u32 },
 }
 
 #[derive(Default, PartialEq)]
@@ -174,7 +175,7 @@ impl App {
                         }
 
                         if let Some(outcome) = popup.handle_event(key_event.code).await {
-                            self.handle_playoutcome(outcome);
+                            self.handle_playoutcome(outcome).await;
                             self.app_state = AppState::Normal;
                         };
 
@@ -203,7 +204,7 @@ impl App {
                         return Ok(());
                     }
                     Output::PlayOutcome(outcome) => {
-                        self.handle_playoutcome(outcome);
+                        self.handle_playoutcome(outcome).await;
                     }
                     Output::Error(err) => {
                         self.broadcast.send_error(err);
@@ -269,7 +270,7 @@ impl App {
         Ok(())
     }
 
-    fn handle_playoutcome(&mut self, outcome: PlayOutcome) {
+    async fn handle_playoutcome(&mut self, outcome: PlayOutcome) {
         match outcome {
             PlayOutcome::Album(id) => {
                 self.controls.play_album(&id, 0);
@@ -285,6 +286,19 @@ impl App {
 
             PlayOutcome::SkipToPosition(index) => {
                 self.controls.skip_to_position(index, true);
+            }
+            PlayOutcome::AddTrackToPlaylist {
+                track_id,
+                playlist_id,
+            } => {
+                // TODO: Handle response from add playlist
+                // HACK: using favorites.client feels wierd
+                let _response = self
+                    .favorites
+                    .client
+                    .add_track_to_playlist(track_id, playlist_id)
+                    .await;
+                //let _ = self.client.add_track_to_playlist(playlist_id, track_id).await;
             }
         }
     }
