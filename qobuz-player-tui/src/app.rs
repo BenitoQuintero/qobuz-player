@@ -60,7 +60,10 @@ pub(crate) enum PlayOutcome {
     Playlist((u32, bool)),
     Track(u32),
     SkipToPosition(u32),
-    AddTrackToPlaylist { track_id: u32, playlist_id: u32 },
+    AddTrackToPlaylist {
+        track_id: String,
+        playlist_id: String,
+    },
 }
 
 #[derive(Default, PartialEq)]
@@ -296,7 +299,7 @@ impl App {
                 let _response = self
                     .favorites
                     .client
-                    .add_track_to_playlist(track_id, playlist_id)
+                    .add_track_to_playlist(&track_id, &playlist_id)
                     .await;
                 //let _ = self.client.add_track_to_playlist(playlist_id, track_id).await;
             }

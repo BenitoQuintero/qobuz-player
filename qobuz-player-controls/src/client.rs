@@ -211,7 +211,7 @@ impl Client {
     }
 
     pub async fn playlist(&self, id: u32) -> Result<Playlist> {
-        // HACK: Add to cache instead but idk how
+        // HACK: Add to cache instead but need to figure out how
         // if let Some(cache) = self.playlist_cache.get(&id).await {
         //     return Ok(cache);
         // }
@@ -278,18 +278,12 @@ impl Client {
         Ok(())
     }
 
-    pub async fn add_track_to_playlist(&self, track_id: u32, playlist_id: u32) -> Result<()> {
+    pub async fn add_track_to_playlist(&self, track_id: &str, playlist_id: &str) -> Result<()> {
         let client = self.get_client().await?;
-
-        let playlist_string = format!("{}", playlist_id);
-        let playlist_str: &str = &playlist_string;
-
-        let track_string = format!("{}", track_id);
-        let track_str: Vec<&str> = vec![&track_string];
-
-        client.playlist_add_track(playlist_str, track_str).await?;
+        client
+            .playlist_add_track(playlist_id, vec![track_id])
+            .await?;
         // self.playlist_cache.invalidate(&playlist_id).await;
-
         Ok(())
     }
 
