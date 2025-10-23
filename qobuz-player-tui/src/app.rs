@@ -64,6 +64,10 @@ pub(crate) enum PlayOutcome {
         track_id: String,
         playlist_id: String,
     },
+    DeleteTrackFromPlaylist {
+        track_id: String,
+        playlist_id: String,
+    },
 }
 
 #[derive(Default, PartialEq)]
@@ -300,6 +304,18 @@ impl App {
                     .favorites
                     .client
                     .add_track_to_playlist(&track_id, &playlist_id)
+                    .await;
+                //let _ = self.client.add_track_to_playlist(playlist_id, track_id).await;
+            }
+            PlayOutcome::DeleteTrackFromPlaylist {
+                track_id,
+                playlist_id,
+            } => {
+                // HACK: using favorites.client feels wierd
+                let _response = self
+                    .favorites
+                    .client
+                    .delete_track_from_playlist(&track_id, &playlist_id)
                     .await;
                 //let _ = self.client.add_track_to_playlist(playlist_id, track_id).await;
             }

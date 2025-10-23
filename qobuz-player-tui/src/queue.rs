@@ -75,7 +75,25 @@ impl QueueState {
                         let user_playlists = self.playlists.items.clone();
 
                         if let Some(id) = id {
-                            return Output::Popup(Popup::Queue(QueuePopupState {
+                            return Output::Popup(Popup::QueueAdd(QueuePopupState {
+                                track_id: id,
+                                playlists: user_playlists,
+                                state: Default::default(),
+                            }));
+                        }
+                        Output::Consumed
+                    }
+                    KeyCode::Char('d') => {
+                        let track_index = self.queue.state.selected();
+
+                        let id = track_index
+                            .and_then(|index| self.queue.items.get(index))
+                            .map(|track| track.id);
+
+                        let user_playlists = self.playlists.items.clone();
+
+                        if let Some(id) = id {
+                            return Output::Popup(Popup::QueueDelete(QueuePopupState {
                                 track_id: id,
                                 playlists: user_playlists,
                                 state: Default::default(),

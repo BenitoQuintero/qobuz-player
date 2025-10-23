@@ -119,7 +119,7 @@ enum Endpoint {
     // PlaylistCreate,
     // PlaylistDelete,
     PlaylistAddTracks,
-    // PlaylistDeleteTracks,
+    PlaylistDeleteTracks,
     // PlaylistUpdatePosition,
     Search,
     Favorites,
@@ -145,7 +145,7 @@ impl Display for Endpoint {
             // Endpoint::PlaylistCreate => "playlist/create",
             // Endpoint::PlaylistDelete => "playlist/delete",
             Endpoint::PlaylistAddTracks => "playlist/addTracks",
-            // Endpoint::PlaylistDeleteTracks => "playlist/deleteTracks",
+            Endpoint::PlaylistDeleteTracks => "playlist/deleteTracks",
             // Endpoint::PlaylistUpdatePosition => "playlist/updateTracksPosition",
             Endpoint::Search => "catalog/search",
             Endpoint::Track => "track/get",
@@ -267,13 +267,12 @@ impl Client {
         let params = vec![("limit", "500"), ("extra", "tracks"), ("offset", "0")];
 
         let response: UserPlaylistsResult = get!(self, &endpoint, Some(&params))?;
+        let mut updated_playlists = Vec::new();
+        for playlist in response.playlists.items.iter() {
+            updated_playlists.push(self.playlist(playlist.id as u32).await?);
+        }
 
-        Ok(response
-            .playlists
-            .items
-            .into_iter()
-            .map(|playlist| parse_playlist(playlist, self.user_id, &self.max_audio_quality))
-            .collect())
+        Ok(updated_playlists)
     }
 
     pub async fn playlist(&self, playlist_id: u32) -> Result<qobuz_player_models::Playlist> {
@@ -355,21 +354,21 @@ impl Client {
         post!(self, &endpoint, form_data)
     }
 
-    // pub async fn playlist_delete_track(
-    //     &self,
-    //     playlist_id: String,
-    //     playlist_track_ids: Vec<String>,
-    // ) -> Result<Playlist> {
-    //     let endpoint = format!("{}{}", self.base_url, Endpoint::PlaylistDeleteTracks);
+    pub async fn playlist_delete_track(
+        &self,
+        playlist_id: &str,
+        playlist_track_ids: Vec<&str>,
+    ) -> Result<qobuz_player_models::Playlist> {
+        let endpoint = format!("{}{}", self.base_url, Endpoint::PlaylistDeleteTracks);
 
-    //     let playlist_track_ids = playlist_track_ids.join(",");
+        let playlist_track_ids = playlist_track_ids.join(",");
 
-    //     let mut form_data = HashMap::new();
-    //     form_data.insert("playlist_id", playlist_id.as_str());
-    //     form_data.insert("playlist_track_ids", playlist_track_ids.as_str());
+        let mut form_data = HashMap::new();
+        form_data.insert("playlist_id", playlist_id);
+        form_data.insert("playlist_track_ids", playlist_track_ids.as_str());
 
-    //     post!(self, &endpoint, form_data)
-    // }
+        post!(self, &endpoint, form_data)
+    }
 
     // pub async fn update_playlist_track_position(
     //     &self,
@@ -1185,13 +1184,18 @@ fn parse_playlist(
     user_id: i64,
     max_audio_quality: &AudioQuality,
 ) -> qobuz_player_models::Playlist {
-    let tracks = playlist.tracks.map_or(Default::default(), |tracks| {
-        tracks
-            .items
-            .into_iter()
-            .map(|t| parse_track(t, max_audio_quality))
-            .collect()
-    });
+    let mut playlist_track_id_map = HashMap::new();
+    let mut tracks = Vec::new();
+
+    if let Some(track_list) = playlist.tracks {
+        for item in track_list.items {
+            let track_id = item.id;
+            let playlist_track_id = item.playlist_track_id.unwrap();
+
+            playlist_track_id_map.insert(track_id, playlist_track_id);
+            tracks.push(parse_track(item, max_audio_quality));
+        }
+    }
 
     let image = if let Some(image) = playlist.image_rectangle.first() {
         Some(image.clone())
@@ -1209,6 +1213,7 @@ fn parse_playlist(
         tracks_count: playlist.tracks_count as u32,
         image,
         tracks,
+        playlist_track_id_map,
     }
 }
 
