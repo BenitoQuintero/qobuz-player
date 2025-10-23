@@ -54,7 +54,7 @@ pub struct Playlist {
     pub name: String,
     pub is_public: bool,
     pub published_from: Option<i64>,
-    pub id: i64,
+    pub id: u64,
     pub is_featured: Option<bool>,
     pub position: Option<i64>,
     #[serde(default)]

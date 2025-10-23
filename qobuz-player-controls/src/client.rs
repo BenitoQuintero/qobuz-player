@@ -287,6 +287,22 @@ impl Client {
         Ok(())
     }
 
+    pub async fn delete_track_from_playlist(
+        &self,
+        track_id: &str,
+        playlist_id: &str,
+    ) -> Result<()> {
+        let client = self.get_client().await?;
+        let _res = client
+            .playlist_delete_track(playlist_id, vec![track_id])
+            .await;
+
+        if let Ok(id) = playlist_id.parse::<u32>() {
+            self.playlist_cache.invalidate(&id).await;
+        }
+        Ok(())
+    }
+
     pub async fn favorites(&self) -> Result<Favorites> {
         if let Some(cache) = self.favorites_cache.get().await {
             return Ok(cache);
