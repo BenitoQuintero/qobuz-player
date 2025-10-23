@@ -1,4 +1,4 @@
-use qobuz_player_models::AlbumSimple;
+use qobuz_player_models::{AlbumSimple, Playlist};
 use ratatui::{crossterm::event::KeyCode, prelude::*, widgets::*};
 
 use crate::{
@@ -24,6 +24,14 @@ pub(crate) struct PlaylistPopupState {
 pub(crate) enum Popup {
     Artist(ArtistPopupState),
     Playlist(PlaylistPopupState),
+    QueueDelete(QueuePopupState),
+}
+
+#[derive(PartialEq)]
+pub(crate) struct QueuePopupState {
+    pub track_id: u32,
+    pub playlists: Vec<Playlist>,
+    pub state: ListState,
 }
 
 impl Popup {
@@ -62,6 +70,28 @@ impl Popup {
 
                 frame.render_widget(Clear, area);
                 frame.render_widget(tabs, area);
+            }
+            Popup::QueueDelete(queue) => {
+                let area = center(
+                    frame.area(),
+                    Constraint::Percentage(50),
+                    Constraint::Length(queue.playlists.len() as u16 + 2),
+                );
+
+                let list: Vec<ListItem> = queue
+                    .playlists
+                    .iter()
+                    .map(|playlist| ListItem::from(Line::from(playlist.title.clone())))
+                    .collect();
+
+                let list = List::new(list)
+                    .block(block("Delete from Playlist", false))
+                    .highlight_style(Style::default().bg(Color::Blue))
+                    .highlight_symbol(">")
+                    .highlight_spacing(HighlightSpacing::Always);
+
+                frame.render_widget(Clear, area);
+                frame.render_stateful_widget(list, area, &mut queue.state);
             }
         };
     }
@@ -104,6 +134,34 @@ impl Popup {
                 KeyCode::Enter => {
                     let id = playlist_popup_state.playlist_id;
                     Some(PlayOutcome::Playlist((id, playlist_popup_state.shuffle)))
+                }
+                _ => None,
+            },
+            Popup::QueueDelete(queue_popup_state) => match key {
+                KeyCode::Up | KeyCode::Char('k') => {
+                    queue_popup_state.state.select_previous();
+                    None
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    queue_popup_state.state.select_next();
+                    None
+                }
+                KeyCode::Enter => {
+                    if let Some(playlist_index) = queue_popup_state.state.selected()
+                        && let Some(playlist) = queue_popup_state.playlists.get(playlist_index)
+                    {
+                        let playlist_id = playlist.id.to_string();
+                        if let Some(playlist_track_id) = playlist
+                            .playlist_track_id_map
+                            .get(&queue_popup_state.track_id)
+                        {
+                            return Some(PlayOutcome::DeleteTrackFromPlaylist {
+                                track_id: playlist_track_id.to_string(),
+                                playlist_id,
+                            });
+                        }
+                    }
+                    None
                 }
                 _ => None,
             },

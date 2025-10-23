@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 #[derive(Debug, Default, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum TrackStatus {
     Played,
@@ -85,7 +86,7 @@ pub struct ArtistPage {
     pub description: Option<String>,
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct Playlist {
     pub is_owned: bool,
     pub title: String,
@@ -94,4 +95,5 @@ pub struct Playlist {
     pub id: u32,
     pub image: Option<String>,
     pub tracks: Vec<Track>,
+    pub playlist_track_id_map: HashMap<u32, u64>,
 }
