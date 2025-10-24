@@ -150,16 +150,11 @@ impl Popup {
                     if let Some(playlist_index) = queue_popup_state.state.selected()
                         && let Some(playlist) = queue_popup_state.playlists.get(playlist_index)
                     {
-                        let playlist_id = playlist.id.to_string();
-                        if let Some(playlist_track_id) = playlist
-                            .playlist_track_id_map
-                            .get(&queue_popup_state.track_id)
-                        {
-                            return Some(PlayOutcome::DeleteTrackFromPlaylist {
-                                track_id: playlist_track_id.to_string(),
-                                playlist_id,
-                            });
-                        }
+                        let playlist_id = playlist.id;
+                        return Some(PlayOutcome::DeleteTrackFromPlaylist {
+                            track_id: queue_popup_state.track_id,
+                            playlist_id,
+                        });
                     }
                     None
                 }

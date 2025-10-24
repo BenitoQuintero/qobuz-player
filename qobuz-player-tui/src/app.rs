@@ -61,8 +61,8 @@ pub(crate) enum PlayOutcome {
     Track(u32),
     SkipToPosition(u32),
     DeleteTrackFromPlaylist {
-        track_id: String,
-        playlist_id: String,
+        track_id: u32,
+        playlist_id: u32,
     },
 }
 
@@ -295,12 +295,20 @@ impl App {
                 playlist_id,
             } => {
                 // HACK: using favorites.client feels wierd
-                let _response = self
-                    .favorites
-                    .client
-                    .delete_track_from_playlist(&track_id, &playlist_id)
-                    .await;
-                //let _ = self.client.add_track_to_playlist(playlist_id, track_id).await;
+                let updated_playlist = self.favorites.client.playlist(playlist_id).await;
+                let playlist_id = playlist_id.to_string();
+
+                if let Ok(playlist) = updated_playlist
+                    && let Some(playlist_track_id) = playlist.playlist_track_id_map.get(&track_id)
+                {
+                    let playlist_track_id = playlist_track_id.to_string();
+                    let _response = self
+                        .favorites
+                        .client
+                        .delete_track_from_playlist(&playlist_track_id, &playlist_id)
+                        .await;
+                    //let _ = self.client.add_track_to_playlist(playlist_id, track_id).await;
+                }
             }
         }
     }
