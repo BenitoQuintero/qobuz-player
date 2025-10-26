@@ -235,7 +235,7 @@ pub(crate) fn album_table<'a>(rows: &[Album], title: &'a str) -> Table<'a> {
         .iter()
         .map(|album| {
             Row::new(vec![
-                Span::from(album.title.clone()),
+                Span::from(mark_explicit(album.title.clone(), album.explicit)),
                 Span::from(album.artist.name.clone()),
                 Span::from(album.release_year.to_string()),
             ])
@@ -277,7 +277,7 @@ pub(crate) fn album_simple_table<'a>(rows: &[AlbumSimple], title: &'a str) -> Ta
         .iter()
         .map(|album| {
             Row::new(vec![
-                Span::from(album.title.clone()),
+                Span::from(mark_explicit(album.title.clone(), album.explicit)),
                 Span::from(album.artist.name.clone()),
             ])
         })
@@ -304,4 +304,8 @@ pub(crate) fn basic_list_table<'a>(rows: Vec<Row<'a>>, title: &'a str) -> Table<
     Table::new(rows, [Constraint::Min(1)])
         .block(block(title, true))
         .row_highlight_style(ROW_HIGHLIGHT_STYLE)
+}
+
+fn mark_explicit(title: String, explicit: bool) -> String {
+    if explicit { title + " 🅴" } else { title }
 }

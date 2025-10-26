@@ -39,7 +39,12 @@ impl Popup {
                 let list: Vec<ListItem> = artist
                     .albums
                     .iter()
-                    .map(|album| ListItem::from(Line::from(album.title.clone())))
+                    .map(|album| {
+                        ListItem::from(Line::from(mark_explicit(
+                            album.title.clone(),
+                            album.explicit,
+                        )))
+                    })
                     .collect();
 
                 let list = List::new(list)
@@ -109,4 +114,8 @@ impl Popup {
             },
         }
     }
+}
+
+fn mark_explicit(title: String, explicit: bool) -> String {
+    if explicit { title + " 🅴" } else { title }
 }
