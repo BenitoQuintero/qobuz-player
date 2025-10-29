@@ -129,7 +129,7 @@ impl App {
 
                 _ = tick_interval.tick() => {
                     if event::poll(Duration::from_millis(0))? {
-                        self.handle_events().await.expect("infailable");
+                        self.handle_events().await.expect("infallible");
                     }
                 }
 

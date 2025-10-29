@@ -156,8 +156,8 @@ fn render_help(frame: &mut Frame) {
         ["Exit", "q"],
     ];
 
-    let max_left = rows.iter().map(|x| x[0].len()).max().expect("infailable");
-    let max_right = rows.iter().map(|x| x[1].len()).max().expect("infailable");
+    let max_left = rows.iter().map(|x| x[0].len()).max().expect("infallible");
+    let max_right = rows.iter().map(|x| x[1].len()).max().expect("infallible");
     let max = std::cmp::max(max_left, max_right);
     let max = max + max;
 
@@ -219,18 +219,6 @@ pub(crate) fn block(title: &str, selectable: bool) -> Block<'_> {
 }
 
 pub(crate) fn album_table<'a>(rows: &[Album], title: &'a str) -> Table<'a> {
-    let max_title_length = rows
-        .iter()
-        .map(|album| album.title.len())
-        .max()
-        .unwrap_or(0);
-
-    let max_artist_name_length = rows
-        .iter()
-        .map(|album| album.artist.name.len())
-        .max()
-        .unwrap_or(0);
-
     let rows: Vec<_> = rows
         .iter()
         .map(|album| {
@@ -246,8 +234,8 @@ pub(crate) fn album_table<'a>(rows: &[Album], title: &'a str) -> Table<'a> {
     let mut table = Table::new(
         rows,
         [
-            Constraint::Min(max_title_length as u16),
-            Constraint::Min(max_artist_name_length as u16),
+            Constraint::Ratio(2, 3),
+            Constraint::Ratio(1, 3),
             Constraint::Length(4),
         ],
     )
@@ -261,18 +249,6 @@ pub(crate) fn album_table<'a>(rows: &[Album], title: &'a str) -> Table<'a> {
 }
 
 pub(crate) fn album_simple_table<'a>(rows: &[AlbumSimple], title: &'a str) -> Table<'a> {
-    let max_title_length = rows
-        .iter()
-        .map(|album| album.title.len())
-        .max()
-        .unwrap_or(0);
-
-    let max_artist_name_length = rows
-        .iter()
-        .map(|album| album.artist.name.len())
-        .max()
-        .unwrap_or(0);
-
     let rows: Vec<_> = rows
         .iter()
         .map(|album| {
@@ -284,15 +260,9 @@ pub(crate) fn album_simple_table<'a>(rows: &[AlbumSimple], title: &'a str) -> Ta
         .collect();
 
     let is_empty = rows.is_empty();
-    let mut table = Table::new(
-        rows,
-        [
-            Constraint::Min(max_title_length as u16),
-            Constraint::Min(max_artist_name_length as u16),
-        ],
-    )
-    .block(block(title, true))
-    .row_highlight_style(ROW_HIGHLIGHT_STYLE);
+    let mut table = Table::new(rows, [Constraint::Ratio(2, 3), Constraint::Ratio(1, 3)])
+        .block(block(title, true))
+        .row_highlight_style(ROW_HIGHLIGHT_STYLE);
 
     if !is_empty {
         table = table.header(Row::new(["Title", "Artist"]).add_modifier(Modifier::BOLD));
