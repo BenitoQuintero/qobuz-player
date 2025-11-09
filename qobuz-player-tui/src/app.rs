@@ -4,6 +4,7 @@ use crate::{
 };
 use core::fmt;
 use image::load_from_memory;
+
 use qobuz_player_controls::{
     PositionReceiver, Status, StatusReceiver, TracklistReceiver,
     controls::Controls,
@@ -21,6 +22,7 @@ use std::{io, sync::Arc, time::Instant};
 use tokio::time::{self, Duration};
 
 pub(crate) struct App {
+    pub(crate) client: Arc<qobuz_player_controls::client::Client>,
     pub(crate) controls: Controls,
     pub(crate) position: PositionReceiver,
     pub(crate) tracklist: TracklistReceiver,
@@ -298,20 +300,15 @@ impl App {
                 track_id,
                 playlist_id,
             } => {
-                // TODO: Handle response from add playlist
-                // HACK: using favorites.client feels wierd
                 let _response = self
-                    .favorites
                     .client
                     .add_track_to_playlist(&track_id, &playlist_id)
                     .await;
-                //let _ = self.client.add_track_to_playlist(playlist_id, track_id).await;
             }
             PlayOutcome::DeleteTrackFromPlaylist {
                 track_id,
                 playlist_id,
             } => {
-                // HACK: using favorites.client feels wierd
                 let updated_playlist = self.favorites.client.playlist(playlist_id).await;
                 let playlist_id = playlist_id.to_string();
 
@@ -320,11 +317,9 @@ impl App {
                 {
                     let playlist_track_id = playlist_track_id.to_string();
                     let _response = self
-                        .favorites
                         .client
                         .delete_track_from_playlist(&playlist_track_id, &playlist_id)
                         .await;
-                    //let _ = self.client.add_track_to_playlist(playlist_id, track_id).await;
                 }
             }
         }
