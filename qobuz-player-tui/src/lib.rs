@@ -80,6 +80,7 @@ pub async fn init(
     let client_clone = client.clone();
 
     let mut app = App {
+        client: client.clone(),
         broadcast,
         notifications: Default::default(),
         controls,

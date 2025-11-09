@@ -71,7 +71,6 @@ impl QueueState {
                             .and_then(|index| self.queue.items.get(index))
                             .map(|track| track.id);
 
-                        // HACK: Probably shouldnt clone this vec, runs everytime
                         let user_playlists = self.playlists.items.clone();
 
                         if let Some(id) = id {
